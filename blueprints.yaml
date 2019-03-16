@@ -1,0 +1,27 @@
+name: Gitlab Markdown Adapter
+version: 0.1.0
+description: Adapts Gitlab's markdown to Grav and its plugins Diagrams and MathJax.
+icon: plug
+author:
+  name: Antoine Goutenoir
+  email: antoine@goutenoir.com
+homepage: https://github.com/goutte/grav-plugin-gitlab-markdown-adapter
+demo: https://m3p2.ljbac.com
+keywords: grav, plugin, gitlab, markdown, mermaid, latex
+bugs: https://github.com/goutte/grav-plugin-gitlab-markdown-adapter/issues
+docs: https://github.com/goutte/grav-plugin-gitlab-markdown-adapter/blob/develop/README.md
+license: MIT
+
+form:
+  validation: strict
+  fields:
+    enabled:
+      type: toggle
+      label: PLUGIN_ADMIN.PLUGIN_STATUS
+      highlight: 1
+      default: 0
+      options:
+        1: PLUGIN_ADMIN.ENABLED
+        0: PLUGIN_ADMIN.DISABLED
+      validate:
+        type: bool
