@@ -5,6 +5,8 @@ use Grav\Common\Plugin;
 use RocketTheme\Toolbox\Event\Event;
 
 /**
+ * Adapts Gitlab's markdown into a digestible format for Grav and consorts.
+ *
  * Class GitlabMarkdownAdapterPlugin
  * @package Grav\Plugin
  */
@@ -32,13 +34,13 @@ class GitlabMarkdownAdapterPlugin extends Plugin
      */
     public function onPluginsInitialized()
     {
-        // Don't proceed if we are in the admin plugin.
+        // Don't proceed if we are in the admin plugin. Why? No idea.
         if ($this->isAdmin()) {
             return;
         }
 
         // Enable the main event we are interested in.
-        // We set a high priority since we want to get there before other plugins.
+        // We set a high priority since we want to get there before the other plugins.
         $this->enable([
             'onPageContentRaw' => ['onPageContentRaw', 10]
         ]);
@@ -52,9 +54,6 @@ class GitlabMarkdownAdapterPlugin extends Plugin
      */
     public function onPageContentRaw(Event $e)
     {
-        // Get a variable from the plugin configuration
-        //$text = $this->grav['config']->get('plugins.gitlab-markdown-adapter.text_var');
-
         // Get the current raw content.
         $content = $e['page']->getRawContent();
 
@@ -82,20 +81,27 @@ class GitlabMarkdownAdapterPlugin extends Plugin
             '$', '$'
         );
 
-        file_put_contents('TEST.LOG', $content);
+        //file_put_contents('TEST.LOG', $content);
 
         // Finally, set the new raw content.
         $e['page']->setRawContent($content);
     }
 
+    /**
+     * Replaces the opening and closing tags of a block by the provided replacements.
+     * The whole matches are replaced. Use lookaheads and lookbehinds if necessary.
+     *
+     * This is a bit more verbose than preg_replace, but perhaps it's more resilient.
+     *
+     * @param string $content
+     * @param string $opening_regex
+     * @param string $closing_regex
+     * @param string $new_opening
+     * @param string $new_closing
+     * @return string
+     */
     protected function replaceBlockIn($content, $opening_regex, $closing_regex, $new_opening, $new_closing)
     {
-//        $opening_matches = array();
-//        preg_match_all($opening_regex, $content, $opening_matches, PREG_OFFSET_CAPTURE);
-
-//        if (empty($opening_matches)) return $content;
-//        if (empty($opening_matches[0])) return $content;
-
         $cursor = 0;
         $got_more_openings = true;
 
@@ -105,7 +111,7 @@ class GitlabMarkdownAdapterPlugin extends Plugin
 
             if (empty($opening_match)) {
                 $got_more_openings = false;
-                // $cursor = <end> ?
+                // $cursor = <end> ? ideally…
                 continue;
             }
 
@@ -125,20 +131,22 @@ class GitlabMarkdownAdapterPlugin extends Plugin
             );
 
             if (empty($closing_match)) {
-                // Yikes! Nothing up to the end of the file ?
+                // Yikes! Nothing up to the end of the file?
                 continue;
             }
+
+            $cm = $closing_match[0];
 
             // /!. substr_replace may possibly choke on multibyte strings.
 
             // Replace closing first because replacing opening shifts the positions.
-            $content = substr_replace($content, '', $closing_match[0][1], strlen($closing_match[0][0]));
-            $content = substr_replace($content, $new_closing, $closing_match[0][1], 0);
+            $content = substr_replace($content, '', $cm[1], strlen($cm[0]));
+            $content = substr_replace($content, $new_closing, $cm[1], 0);
 
             $content = substr_replace($content, '', $om[1], strlen($om[0]));
             $content = substr_replace($content, $new_opening, $om[1], 0);
 
-            $cursor = $closing_match[0][1] + strlen($new_closing) + (strlen($new_opening) - strlen($om[0]));
+            $cursor = $cm[1] + strlen($new_closing) + (strlen($new_opening) - strlen($om[0]));
         }
 
         return $content;
