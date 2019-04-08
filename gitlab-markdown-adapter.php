@@ -119,7 +119,7 @@ class GitlabMarkdownAdapterPlugin extends Plugin
 
             if ($om[1] < $cursor) {
                 // Yikes! A previous block ended before this one started!
-                continue;
+                break;
             }
 
             $cursor = $om[1];
@@ -132,7 +132,7 @@ class GitlabMarkdownAdapterPlugin extends Plugin
 
             if (empty($closing_match)) {
                 // Yikes! Nothing up to the end of the file?
-                continue;
+                break;
             }
 
             $cm = $closing_match[0];
